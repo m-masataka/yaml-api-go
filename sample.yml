@@ -1,0 +1,8 @@
+server:
+  port: 9999
+app1:
+  path: "/ur/ss"
+  func: func1
+app2:
+  path: "/oo/ss"
+  func: func2
