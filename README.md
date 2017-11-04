@@ -32,7 +32,7 @@ Implement function that is linked with API endpoint.
 ```
 fmap := map[string]func(http.ResponseWriter, *http.Request){"f1":func1, "f2":func2}
 
-yamlapigo.YamlApi(yamlfile,c)
+yamlapigo.YamlApi(yamlfile, fmap)
 ```
 
 
