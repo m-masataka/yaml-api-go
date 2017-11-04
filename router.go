@@ -1,4 +1,4 @@
-package yamlapi
+package yamlapigo
 
 import (
     "fmt"

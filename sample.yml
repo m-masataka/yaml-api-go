@@ -1,8 +1,9 @@
 server:
   port: 9999
-app1:
-  path: "/ur/ss"
-  func: func1
-app2:
-  path: "/oo/ss"
-  func: func2
+api:
+  app1:
+    path: "/api/func1"
+    function: func1
+  app2:
+    path: "/api/func2"
+    function: func2

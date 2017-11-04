@@ -1,8 +1,7 @@
-package yamlapi
+package yamlapigo
 
 import (
     "net/http"
-    "strings"
 )
 
 type Route struct {
@@ -16,13 +15,6 @@ func (r *Route) Path(tpl string) *Route {
 }
 
 func (r *Route) Match(req *http.Request, match *RouteMatch) bool {
-    if strings.Contains(req.URL.Path, "/api/cube") {
-        if r.path == "/api/cube" {
-            match.Route = r
-            match.Handler = r.handler
-            return true
-        }
-    }
     if r.path == req.URL.Path {
         match.Route = r
         match.Handler = r.handler
