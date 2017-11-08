@@ -1,9 +1,16 @@
 server:
   port: 9999
+  notfound: notfound
 api:
   app1:
     path: "/api/func1"
     function: func1
+    apitype: normal
   app2:
-    path: "/api/func2"
+    path: "/api/func2/{var1}"
     function: func2
+    apitype: vars
+  app3:
+    path: "/api/func3/{var1}/var/{var2}"
+    function: func3
+    apitype: vars

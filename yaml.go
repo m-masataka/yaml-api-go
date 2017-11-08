@@ -8,6 +8,7 @@ import (
     "gopkg.in/yaml.v2"
 )
 
+
 func YamlApi(buf []byte, fmap map[string]func(http.ResponseWriter, *http.Request)) error {
     m := make(map[interface{}]interface{})
     err := yaml.Unmarshal(buf, &m)
@@ -23,6 +24,9 @@ func YamlApi(buf []byte, fmap map[string]func(http.ResponseWriter, *http.Request
                 switch key {
                 case "port":
                     port = fmt.Sprintf(":%d",m[serv].(map[interface {}]interface {})[key].(int))
+                case "notfound":
+                    function := fmt.Sprintf("%s",m[serv].(map[interface {}]interface {})[key].(string))
+                    router.NotFoundHandler = http.HandlerFunc(fmap[function])
                 default:
                     continue
                 }
@@ -31,7 +35,8 @@ func YamlApi(buf []byte, fmap map[string]func(http.ResponseWriter, *http.Request
             for key, _ := range m[serv].(map[interface {}]interface {}) {
                 path := fmt.Sprintf(m[serv].(map[interface {}]interface {})[key].(map[interface {}]interface {})["path"].(string))
                 function := fmt.Sprintf(m[serv].(map[interface {}]interface {})[key].(map[interface {}]interface {})["function"].(string))
-                router.HandleFunc(path, fmap[function])
+                apitype := fmt.Sprintf(m[serv].(map[interface {}]interface {})[key].(map[interface {}]interface {})["apitype"].(string))
+                router.HandleFunc(path, fmap[function],apitype)
             }
         default:
             continue

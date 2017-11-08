@@ -6,6 +6,7 @@ import (
 )
 
 type Router struct {
+    NotFoundHandler http.Handler
     routes []*Route
 }
 
@@ -20,7 +21,7 @@ func NewRouter() *Router {
     return &Router{}
 }
 
-func APINotFound(w http.ResponseWriter, r *http.Request) {
+func NotFoundDefault(w http.ResponseWriter, r *http.Request) {
     fmt.Fprintf(w, "API Not Found")
 }
 
@@ -30,7 +31,7 @@ func (r *Router) ServeHTTP( w http.ResponseWriter, req *http.Request ) {
     if r.Match(req, &match) {
         handler = match.Handler
     } else {
-        handler = http.HandlerFunc(APINotFound)
+        handler = http.HandlerFunc(NotFoundDefault)
     }
     handler.ServeHTTP(w, req)
 }
@@ -41,11 +42,15 @@ func (r *Router) Match (req *http.Request, match *RouteMatch ) bool {
             return true
         }
     }
+    if r.NotFoundHandler != nil {
+        match.Handler = r.NotFoundHandler
+        return true
+    }
     return false
 }
 
-func (r *Router) HandleFunc(path string, f func(http.ResponseWriter, *http.Request)) *Route {
-    return r.NewRoute().Path(path).HandlerFunc(f)
+func (r *Router) HandleFunc(path string, f func(http.ResponseWriter, *http.Request), apitype string) *Route {
+    return r.NewRoute().RouteConf(path, apitype).HandlerFunc(f)
 }
 
 func (r *Router) NewRoute() *Route {
@@ -54,6 +59,6 @@ func (r *Router) NewRoute() *Route {
     return route
 }
 
-func (r *Router) Path(tpl string) *Route {
-    return r.NewRoute().Path(tpl)
+func (r *Router) RouteConf(tpl string, apitype string) *Route {
+    return r.NewRoute().RouteConf(tpl,apitype)
 }
