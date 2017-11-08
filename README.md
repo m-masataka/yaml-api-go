@@ -10,7 +10,9 @@ go get github.com/m-masataka/yamlapigo
 
 Define your API with yaml file.  
 
-- ``server`` field represent global configration.(Now it only port)
+- ``server`` field represent global configration.
+  - ``port``
+  - ``notfound`` see [Notfound](#notfound)
 - ``api`` field represent api details. 
   - ``path`` is api endpoint path
   - ``function`` is function that is called by api endpoint.
@@ -38,8 +40,29 @@ fmap := map[string]func(http.ResponseWriter, *http.Request){"f1":func1, "f2":fun
 yamlapigo.YamlApi(yamlfile, fmap)
 ```
 
+## <a name="notfound"> Notfound
+You can set Not Found response in your program.
+```
+server:
+  port: 9999
+  notfound: notfoundfunc 
+...
+```
+In your program...
+```
+func notfound(w http.ResponseWriter, r *http.Request) {
+   fmt.Fprintf(w,"Notfound\n")
+}
+...
+...
+    c := map[string]func(http.ResponseWriter, *http.Request){
+        "notfound": notfound,
+    }
+    err = yamlapigo.YamlApi(buf,c)
+```
+
 ## <a name="vars"> Vars
-You can set some valiables with API.  
+You can use some valiables with API.  
 You define apitype = ``vars`` and {valiable} in path.  
 For example
 ```
@@ -91,15 +114,22 @@ func3: var1=12r, var2=sdf
 
 sample.yml
 ```
-service:
+server:
   port: 9999
+  notfound: notfound
 api:
   app1:
     path: "/api/func1"
-    function: "f1"
+    function: func1
+    apitype: normal
   app2:
-    path: "/api/func2"
-    function: "f2"
+    path: "/api/func2/{var1}"
+    function: func2
+    apitype: vars
+  app3:
+    path: "/api/func3/{var1}/var/{var2}"
+    function: func3
+    apitype: vars
 ```
 
 main.go
@@ -114,20 +144,40 @@ import (
 )
 
 func func1(w http.ResponseWriter, r *http.Request) {
-   fmt.Fprintf(w,"This is func1\n")
+    fmt.Fprintf(w,"func1\n")
 }
 
 func func2(w http.ResponseWriter, r *http.Request) {
-   fmt.Fprintf(w,"This is func2\n")
+   var1 := yamlapigo.ContextGet(r,"var1").(string)
+   fmt.Fprintf(w,"func2: var1="+var1+"\n")
+}
+
+func func3(w http.ResponseWriter, r *http.Request) {
+   var1 := yamlapigo.ContextGet(r,"var1").(string)
+   var2 := yamlapigo.ContextGet(r,"var1").(string)
+   fmt.Fprintf(w,"func3: var1=" + var1 +", var2="+var2+"\n")
+}
+
+func notfound(w http.ResponseWriter, r *http.Request) {
+   fmt.Fprintf(w,"Notfound\n")
 }
 
 func main() {
-    buf, err := ioutil.ReadFile("./sample.yml")
-    fmap := map[string]func(http.ResponseWriter, *http.Request){"f1":func1, "f2":func2}
+    buf, err := ioutil.ReadFile("./yamlapigo/sample.yml")
     if err != nil {
+        fmt.Println(err)
         return
     }
-    err = yamlapigo.YamlApi(buf,fmap)
-    fmt.Println(err)
+    c := map[string]func(http.ResponseWriter, *http.Request){
+        "func1":func1,
+        "func2":func2,
+        "func3":func3,
+        "notfound": notfound,
+    }
+    err = yamlapigo.YamlApi(buf,c)
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
 }
 ```
