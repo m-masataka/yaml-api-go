@@ -12,7 +12,7 @@ Define your API with yaml file.
 
 - ``server`` field represent global configration.
   - ``port``
-  - ``notfound`` see [Notfound](#notfound)
+  - ``notfound`` see [Not found](#notfound)
 - ``api`` field represent api details. 
   - ``path`` is api endpoint path
   - ``function`` is function that is called by api endpoint.
@@ -40,7 +40,7 @@ fmap := map[string]func(http.ResponseWriter, *http.Request){"f1":func1, "f2":fun
 yamlapigo.YamlApi(yamlfile, fmap)
 ```
 
-## <a name="notfound"> Notfound
+## <a name="notfound"> Not found
 You can set Not Found response in your program.
 ```
 server:
