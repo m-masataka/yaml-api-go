@@ -14,7 +14,7 @@ Define your API with yaml file.
 - ``api`` field represent api details. 
   - ``path`` is api endpoint path
   - ``function`` is function that is called by api endpoint.
-  - ``apitype`` is type of api. see 
+  - ``apitype`` is type of api. see [Vars](#vars)
 
 ```
 server:
@@ -23,9 +23,11 @@ api:
   app1:
     path: "/api/func1"
     function: "f1"
+    apitype: normal
   app2:
-    path: "/api/func2"
+    path: "/api/func2/{var1}"
     function: "f2"
+    apitype: vars
 ```
 
 Implement function that is linked with API endpoint.
@@ -36,7 +38,7 @@ fmap := map[string]func(http.ResponseWriter, *http.Request){"f1":func1, "f2":fun
 yamlapigo.YamlApi(yamlfile, fmap)
 ```
 
-## Vars
+## <a name="vars"> Vars
 You can set some valiables with API.  
 You define apitype = ``vars`` and {valiable} in path.  
 For example
