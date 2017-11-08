@@ -72,7 +72,7 @@ func func2(w http.ResponseWriter, r *http.Request) {
 
 func func3(w http.ResponseWriter, r *http.Request) {
    var1 := yamlapigo.ContextGet(r,"var1").(string)
-   var2 := yamlapigo.ContextGet(r,"var1").(string)
+   var2 := yamlapigo.ContextGet(r,"var2").(string)
    fmt.Fprintf(w,"func3: var1=" + var1 +", var2="+var2+"\n")
 }
 ```
@@ -84,7 +84,7 @@ func1
 $ curl http://localhost:9999/api/func2/ssssss
 func2: var1=ssssss
 $ curl http://localhost:9999/api/func3/12r/var/sdf
-func3: var1=12r, var2=12r
+func3: var1=12r, var2=sdf
 ```
 
 ## Sample
