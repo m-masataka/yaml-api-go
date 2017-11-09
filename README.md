@@ -17,19 +17,23 @@ Define your API with yaml file.
   - ``path`` is api endpoint path
   - ``function`` is function that is called by api endpoint.
   - ``apitype`` is type of api. see [Vars](#vars)
+  - ``methods`` is restriction of method. see [Methods](#methods)
 
 ```
 server:
   port: 9999
+  notfound: notfound
 api:
   app1:
     path: "/api/func1"
     function: "f1"
     apitype: normal
+    methods: "GET,POST"
   app2:
     path: "/api/func2/{var1}"
     function: "f2"
     apitype: vars
+    methods: "POST"
 ```
 
 Implement function that is linked with API endpoint.
@@ -39,6 +43,22 @@ fmap := map[string]func(http.ResponseWriter, *http.Request){"f1":func1, "f2":fun
 
 yamlapigo.YamlApi(yamlfile, fmap)
 ```
+
+## <a name="methods"> Methods
+You can ristrict the method by this field.  
+```
+api:
+  ...
+  ...
+  methods: "PUT,POST"
+```
+You can set ALL method in this field.
+if you access this api by PUT method, you receive following message.
+```
+$ curl -X GET http://localhost:9999/api/func2/sss
+Method not match
+```
+By default (If you not define this field), ALL method is allowed.
 
 ## <a name="notfound"> Not found
 You can set Not Found response in your program.

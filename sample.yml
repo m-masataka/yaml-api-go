@@ -10,7 +10,9 @@ api:
     path: "/api/func2/{var1}"
     function: func2
     apitype: vars
+    methods: "POST,GET"
   app3:
     path: "/api/func3/{var1}/var/{var2}"
     function: func3
     apitype: vars
+    methods: "PUT"

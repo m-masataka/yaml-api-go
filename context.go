@@ -30,3 +30,9 @@ func ContextGet(r *http.Request, key interface{} ) interface{} {
     mutex.RUnlock()
     return val
 }
+
+func ContextClear(r *http.Request ) {
+    mutex.Lock()
+    delete(data, r)
+    mutex.Unlock()
+}

@@ -4,6 +4,7 @@ import (
     "fmt"
     "time"
     "net/http"
+    "strings"
     "log"
     "gopkg.in/yaml.v2"
 )
@@ -36,7 +37,12 @@ func YamlApi(buf []byte, fmap map[string]func(http.ResponseWriter, *http.Request
                 path := fmt.Sprintf(m[serv].(map[interface {}]interface {})[key].(map[interface {}]interface {})["path"].(string))
                 function := fmt.Sprintf(m[serv].(map[interface {}]interface {})[key].(map[interface {}]interface {})["function"].(string))
                 apitype := fmt.Sprintf(m[serv].(map[interface {}]interface {})[key].(map[interface {}]interface {})["apitype"].(string))
-                router.HandleFunc(path, fmap[function],apitype)
+                methods := "GET,PUT,POST,DELETE,HEAD,OPTIONS,TRACE,CONNECT"
+                if value, ok := m[serv].(map[interface {}]interface {})[key].(map[interface {}]interface {})["methods"]; ok {
+                    methods = value.(string)
+                }
+                methodarray := strings.Split(methods,",")
+                router.HandleFunc(path, fmap[function],apitype).Methods(methodarray)
             }
         default:
             continue

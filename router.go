@@ -14,7 +14,7 @@ type RouteMatch struct {
     Route    *Route
     Handler  http.Handler
     Vars     map[string]string
-    MatchErr error
+    MethodErr bool
 }
 
 func NewRouter() *Router {
@@ -22,7 +22,11 @@ func NewRouter() *Router {
 }
 
 func NotFoundDefault(w http.ResponseWriter, r *http.Request) {
-    fmt.Fprintf(w, "API Not Found")
+    fmt.Fprintf(w, "API Not Found\n")
+}
+
+func MethodErrFunc(w http.ResponseWriter, r *http.Request) {
+    fmt.Fprintf(w, "Method not match\n")
 }
 
 func (r *Router) ServeHTTP( w http.ResponseWriter, req *http.Request ) {
@@ -30,9 +34,13 @@ func (r *Router) ServeHTTP( w http.ResponseWriter, req *http.Request ) {
     var match RouteMatch
     if r.Match(req, &match) {
         handler = match.Handler
+        if !match.MethodErr {
+            handler = http.HandlerFunc(MethodErrFunc)
+        }
     } else {
         handler = http.HandlerFunc(NotFoundDefault)
     }
+    defer ContextClear(req)
     handler.ServeHTTP(w, req)
 }
 
@@ -62,3 +70,4 @@ func (r *Router) NewRoute() *Route {
 func (r *Router) RouteConf(tpl string, apitype string) *Route {
     return r.NewRoute().RouteConf(tpl,apitype)
 }
+
