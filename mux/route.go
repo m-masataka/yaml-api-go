@@ -1,4 +1,4 @@
-package yamlapigo
+package mux
 
 import (
     "net/http"

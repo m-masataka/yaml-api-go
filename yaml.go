@@ -7,6 +7,7 @@ import (
     "strings"
     "log"
     "gopkg.in/yaml.v2"
+    "github.com/m-masataka/yamlapigo/mux"
 )
 
 
@@ -16,7 +17,7 @@ func YamlApi(buf []byte, fmap map[string]func(http.ResponseWriter, *http.Request
     if err != nil {
         return err
     }
-    router := NewRouter()
+    router := mux.NewRouter()
     port := ":80"
     for serv, _ := range m {
         switch serv {
@@ -56,4 +57,9 @@ func YamlApi(buf []byte, fmap map[string]func(http.ResponseWriter, *http.Request
     }
     log.Fatal(srv.ListenAndServe())
     return nil
+}
+
+func GetVars(r *http.Request, s string) interface{} {
+	vars := mux.ContextGet(r,s)
+	return vars
 }

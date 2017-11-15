@@ -1,4 +1,4 @@
-package yamlapigo
+package mux
 
 import (
     "fmt"
@@ -26,7 +26,8 @@ func NotFoundDefault(w http.ResponseWriter, r *http.Request) {
 }
 
 func MethodErrFunc(w http.ResponseWriter, r *http.Request) {
-    fmt.Fprintf(w, "Method not match\n")
+	w.WriteHeader(405)
+    //fmt.Fprintf(w, "Method not match\n")
 }
 
 func (r *Router) ServeHTTP( w http.ResponseWriter, req *http.Request ) {
