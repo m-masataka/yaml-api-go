@@ -16,3 +16,8 @@ api:
     function: func3
     apitype: vars
     methods: "PUT"
+  app4:
+    path: "/api/func4/{id:^[0-9]+$}"
+    function: func4
+    apitype: vars
+    methods: "GET"

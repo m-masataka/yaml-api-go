@@ -130,6 +130,14 @@ $ curl http://localhost:9999/api/func3/12r/var/sdf
 func3: var1=12r, var2=sdf
 ```
 
+If you want to use regexp, set the vars field as ``{var:[regexp]}``.  
+```
+  app4:
+    path: "/api/func4/{id:^[0-9]+$}
+    function: "f4"
+    apitype: vars
+```
+
 ## Sample
 
 sample.yml

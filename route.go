@@ -18,7 +18,7 @@ func (r *Route) RouteConf(tpl string, apitype string) *Route {
 }
 
 func MatchVars(s string, req *http.Request) bool {
-    match, keys, values := MatchRegexp(s, req.URL.Path)
+    match, keys, values := MatchVarsRegexp(s, req.URL.Path)
     for i, key := range keys {
         ContextSet(req, key, values[i])
     }

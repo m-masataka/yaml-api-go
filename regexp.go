@@ -1,9 +1,31 @@
 package yamlapigo
 
-func MatchRegexp( path string, url string ) (bool, []string, []string){
+import (
+	"regexp"
+)
+
+func ForwardPoint( path string, p int) (string, int) {
+    brace_end := []byte(`}`)
+	reg := ""
+	for {
+		p ++
+		if path[p] == brace_end[0] {
+			p ++
+			break
+		}
+		if !(p<len(path)){
+			break
+		}
+		reg = reg + string(path[p])
+	}
+	return reg, p
+}
+
+func MatchVarsRegexp( path string, url string ) (bool, []string, []string){
     match := true
     brace_start := []byte(`{`)
     brace_end := []byte(`}`)
+    coron := []byte(`:`)
     slash := []byte(`/`)
     keys := []string{}
     values := []string{}
@@ -17,8 +39,14 @@ func MatchRegexp( path string, url string ) (bool, []string, []string){
                 break
             } else {
                 key := ""
+				reg := ""
                 for {
                     p ++
+					if path[p] == coron[0] {
+						keys = append(keys, key)
+						reg, p = ForwardPoint(path, p)
+						break
+					}
                     if path[p] == brace_end[0] {
                         keys = append(keys, key)
                         p++
@@ -43,6 +71,13 @@ func MatchRegexp( path string, url string ) (bool, []string, []string){
                         break
                     }
                 }
+				if reg != "" {
+					re := regexp.MustCompile(reg)
+					if !re.MatchString(value) {
+						match = false
+						break
+					}
+				}
             }
         }
         u ++
