@@ -58,7 +58,7 @@ if you access this api by PUT method, you receive following message.
 $ curl -X GET http://localhost:9999/api/func2/sss
 Method not match
 ```
-By default (If you not define this field), ALL method is allowed.
+By default (If you don't define this field), ALL method is allowed.
 
 ## <a name="notfound"> Not found
 You can set Not Found response in your program.
