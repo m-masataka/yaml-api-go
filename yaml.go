@@ -10,6 +10,50 @@ import (
     "github.com/m-masataka/yamlapigo/mux"
 )
 
+func test(w http.ResponseWriter, r *http.Request) {
+    fmt.Fprintf(w,"test\n")
+}
+
+func getstringmap(m interface{}, key interface {}, s string) (string, error) {
+	var ret string
+	if value, ok := m.(map[interface{}]interface {})[key].(map[interface {}]interface {})[s]; ok {
+		ret = value.(string)
+	} else {
+		return "", fmt.Errorf("Error Not Found")
+	}
+	return ret, nil
+}
+
+func parseapi(m interface{}, fmap map[string]func(http.ResponseWriter, *http.Request), route *mux.Route, router *mux.Router, counter int) error {
+	counter ++
+	for key, _ := range m.(map[interface{}]interface {}) {
+        path, _ := getstringmap(m, key, "path")
+        function, err := getstringmap(m, key, "function")
+		if err != nil {
+			return fmt.Errorf("function is not defined in yamlfile")
+		} else if _, ok := fmap[function]; !ok {
+			return fmt.Errorf("%s is not defined in map", function)
+		}
+        methods, err := getstringmap(m, key, "methods")
+		if err != nil {
+			methods = "GET,PUT,POST,DELETE,HEAD,OPTIONS,TRACE,CONNECT"
+		}
+        methodarray := strings.Split(methods,",")
+		var r *mux.Route
+		if counter == 1 {
+			r = router.HandleFunc(path, fmap[function]).Methods(methodarray)
+		} else {
+			r = route.Subroute(path,fmap[function]).Methods(methodarray)
+		}
+		if value, ok := m.(map[interface {}]interface {})[key].(map[interface {}]interface {})["children"]; ok {
+			err = parseapi(value, fmap, r, router, counter)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
 
 func YamlApi(buf []byte, fmap map[string]func(http.ResponseWriter, *http.Request)) error {
     m := make(map[interface{}]interface{})
@@ -34,17 +78,10 @@ func YamlApi(buf []byte, fmap map[string]func(http.ResponseWriter, *http.Request
                 }
             }
         case "api":
-            for key, _ := range m[serv].(map[interface {}]interface {}) {
-                path := fmt.Sprintf(m[serv].(map[interface {}]interface {})[key].(map[interface {}]interface {})["path"].(string))
-                function := fmt.Sprintf(m[serv].(map[interface {}]interface {})[key].(map[interface {}]interface {})["function"].(string))
-                apitype := fmt.Sprintf(m[serv].(map[interface {}]interface {})[key].(map[interface {}]interface {})["apitype"].(string))
-                methods := "GET,PUT,POST,DELETE,HEAD,OPTIONS,TRACE,CONNECT"
-                if value, ok := m[serv].(map[interface {}]interface {})[key].(map[interface {}]interface {})["methods"]; ok {
-                    methods = value.(string)
-                }
-                methodarray := strings.Split(methods,",")
-                router.HandleFunc(path, fmap[function],apitype).Methods(methodarray)
-            }
+            err := parseapi(m[serv], fmap, nil, router, 0)
+			if err != nil {
+				return err
+			}
         default:
             continue
         }

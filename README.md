@@ -16,8 +16,8 @@ Define your API with yaml file.
 - ``api`` field represent api details. 
   - ``path`` is api endpoint path
   - ``function`` is function that is called by api endpoint.
-  - ``apitype`` is type of api. see [Vars](#vars)
   - ``methods`` is restriction of method. see [Methods](#methods)
+  - ``children`` define Hierachical api structure.
 
 ```
 server:
@@ -27,13 +27,16 @@ api:
   app1:
     path: "/api/func1"
     function: "f1"
-    apitype: normal
     methods: "GET,POST"
   app2:
     path: "/api/func2/{var1}"
     function: "f2"
-    apitype: vars
     methods: "POST"
+    children:
+      app3:
+        path: "/{var3}"
+        function: "f3"
+        methods: "GET"
 ```
 
 Implement function that is linked with API endpoint.
@@ -149,15 +152,22 @@ api:
   app1:
     path: "/api/func1"
     function: func1
-    apitype: normal
   app2:
     path: "/api/func2/{var1}"
     function: func2
-    apitype: vars
+    methods: "POST,GET"
   app3:
     path: "/api/func3/{var1}/var/{var2}"
     function: func3
-    apitype: vars
+    methods: "PUT"
+  app4:
+    path: "/api/func4/{id:^[0-9]+$}"
+    function: func4
+    methods: "GET"
+    child:
+      app5:
+        path: "/pic"
+        function: func5
 ```
 
 main.go
@@ -169,21 +179,30 @@ import (
     "net/http"
     "io/ioutil"
     "github.com/m-masataka/yamlapigo"
-)
-
+) 
 func func1(w http.ResponseWriter, r *http.Request) {
     fmt.Fprintf(w,"func1\n")
 }
 
 func func2(w http.ResponseWriter, r *http.Request) {
-   var1 := yamlapigo.ContextGet(r,"var1").(string)
+   var1 := yamlapigo.GetVars(r,"var1").(string)
    fmt.Fprintf(w,"func2: var1="+var1+"\n")
 }
 
 func func3(w http.ResponseWriter, r *http.Request) {
-   var1 := yamlapigo.ContextGet(r,"var1").(string)
-   var2 := yamlapigo.ContextGet(r,"var1").(string)
+   var1 := yamlapigo.GetVars(r,"var1").(string)
+   var2 := yamlapigo.GetVars(r,"var1").(string)
    fmt.Fprintf(w,"func3: var1=" + var1 +", var2="+var2+"\n")
+}
+
+func func4(w http.ResponseWriter, r *http.Request) {
+   id := yamlapigo.GetVars(r,"id").(string)
+   fmt.Fprintf(w,"func4: id="+id+"\n")
+}
+
+func func5(w http.ResponseWriter, r *http.Request) {
+   id := yamlapigo.GetVars(r,"id").(string)
+   fmt.Fprintf(w,"func5: id="+id+"\n")
 }
 
 func notfound(w http.ResponseWriter, r *http.Request) {
@@ -200,12 +219,14 @@ func main() {
         "func1":func1,
         "func2":func2,
         "func3":func3,
+        "func4":func4,
+        "func5":func5,
         "notfound": notfound,
     }
     err = yamlapigo.YamlApi(buf,c)
     if err != nil {
         fmt.Println(err)
-        return
+		return
     }
 }
 ```

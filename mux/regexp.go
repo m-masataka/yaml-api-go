@@ -21,8 +21,9 @@ func ForwardPoint( path string, p int) (string, int) {
 	return reg, p
 }
 
-func MatchVarsRegexp( path string, url string ) (bool, []string, []string){
+func MatchVarsRegexp( path string, url string ) (bool, bool, []string, []string){
     match := true
+	next  := false
     brace_start := []byte(`{`)
     brace_end := []byte(`}`)
     coron := []byte(`:`)
@@ -85,12 +86,15 @@ func MatchVarsRegexp( path string, url string ) (bool, []string, []string){
         if p < len(path) && u < len(url) {
         }else if !(p < len(path)) && !(u < len(url)){
             break
-        } else {
+        } else if !(p < len(path)) && u < len(url) {
+			next = true
+			break
+		}else {
             match = false
             break
         }
     }
-    return match, keys, values
+    return match, next, keys, values
 }
 
 

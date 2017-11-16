@@ -5,19 +5,19 @@ api:
   app1:
     path: "/api/func1"
     function: func1
-    apitype: normal
   app2:
     path: "/api/func2/{var1}"
     function: func2
-    apitype: vars
     methods: "POST,GET"
   app3:
     path: "/api/func3/{var1}/var/{var2}"
     function: func3
-    apitype: vars
     methods: "PUT"
   app4:
     path: "/api/func4/{id:^[0-9]+$}"
     function: func4
-    apitype: vars
     methods: "GET"
+    child:
+      app5:
+        path: "/pic"
+        function: func5

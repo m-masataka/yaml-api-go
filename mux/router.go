@@ -1,7 +1,6 @@
 package mux
 
 import (
-    "fmt"
     "net/http"
 )
 
@@ -22,12 +21,11 @@ func NewRouter() *Router {
 }
 
 func NotFoundDefault(w http.ResponseWriter, r *http.Request) {
-    fmt.Fprintf(w, "API Not Found\n")
+	w.WriteHeader(404)
 }
 
 func MethodErrFunc(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(405)
-    //fmt.Fprintf(w, "Method not match\n")
 }
 
 func (r *Router) ServeHTTP( w http.ResponseWriter, req *http.Request ) {
@@ -58,8 +56,8 @@ func (r *Router) Match (req *http.Request, match *RouteMatch ) bool {
     return false
 }
 
-func (r *Router) HandleFunc(path string, f func(http.ResponseWriter, *http.Request), apitype string) *Route {
-    return r.NewRoute().RouteConf(path, apitype).HandlerFunc(f)
+func (r *Router) HandleFunc(path string, f func(http.ResponseWriter, *http.Request)) *Route {
+    return r.NewRoute().RouteConf(path).HandlerFunc(f)
 }
 
 func (r *Router) NewRoute() *Route {
@@ -68,7 +66,10 @@ func (r *Router) NewRoute() *Route {
     return route
 }
 
-func (r *Router) RouteConf(tpl string, apitype string) *Route {
-    return r.NewRoute().RouteConf(tpl,apitype)
+func (r *Router) RouteConf(tpl string) *Route {
+    return r.NewRoute().RouteConf(tpl)
 }
 
+func (r *Router) PathPrefix(tpl string) *Route {
+	return r.NewRoute().PathPrefix(tpl)
+}
