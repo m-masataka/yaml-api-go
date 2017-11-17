@@ -104,7 +104,7 @@ api:
     path: "/api/func3/{var1}/var/{var2}"
     function: "f3"
 ```
-You can get valiables by use ``yamlapigo.ContextGet()``.
+You can get valiables by use ``yamlapigo.GetVars()``.
 
 ```
 func func1(w http.ResponseWriter, r *http.Request) {
@@ -112,13 +112,13 @@ func func1(w http.ResponseWriter, r *http.Request) {
 }
 
 func func2(w http.ResponseWriter, r *http.Request) {
-   var1 := yamlapigo.ContextGet(r,"var1").(string)
+   var1 := yamlapigo.GetVars(r,"var1").(string)
    fmt.Fprintf(w,"func2: var1="+var1+"\n")
 }
 
 func func3(w http.ResponseWriter, r *http.Request) {
-   var1 := yamlapigo.ContextGet(r,"var1").(string)
-   var2 := yamlapigo.ContextGet(r,"var2").(string)
+   var1 := yamlapigo.GetVars(r,"var1").(string)
+   var2 := yamlapigo.GetVars(r,"var2").(string)
    fmt.Fprintf(w,"func3: var1=" + var1 +", var2="+var2+"\n")
 }
 ```
