@@ -48,7 +48,7 @@ Implement function that is linked with API endpoint.
 ```
 fmap := map[string]func(http.ResponseWriter, *http.Request){"f1":func1, "f2":func2}
 
-yamlapigo.YamlApi(yamlfile, fmap)
+yamlapigo.YamlAPI(yamlfile, fmap)
 ```
 
 ## <a name="methods"> Methods
@@ -85,7 +85,7 @@ func notfound(w http.ResponseWriter, r *http.Request) {
     c := map[string]func(http.ResponseWriter, *http.Request){
         "notfound": notfound,
     }
-    err = yamlapigo.YamlApi(buf,c)
+    err = yamlapigo.YamlAPI(buf,c)
 ```
 
 ## <a name="vars"> Vars
@@ -231,7 +231,7 @@ func main() {
         "func5":func5,
         "notfound": notfound,
     }
-    err = yamlapigo.YamlApi(buf,c)
+    err = yamlapigo.YamlAPI(buf,c)
     if err != nil {
         fmt.Println(err)
 		return
