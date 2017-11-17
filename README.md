@@ -27,16 +27,20 @@ api:
   app1:
     path: "/api/func1"
     function: "f1"
-    methods: "GET,POST"
+    methods:
+      - GET
+      - POST
   app2:
     path: "/api/func2/{var1}"
     function: "f2"
-    methods: "POST"
+    methods:
+      - POST
     children:
       app3:
         path: "/{var3}"
         function: "f3"
-        methods: "GET"
+        methods:
+          - GET
 ```
 
 Implement function that is linked with API endpoint.
@@ -53,7 +57,7 @@ You can ristrict the method by this field.
 api:
   ...
   ...
-  methods: "PUT,POST"
+  methods: [PUT, POST]
 ```
 You can set ALL method in this field.
 if you access this api by PUT method, you receive following message.
@@ -86,7 +90,6 @@ func notfound(w http.ResponseWriter, r *http.Request) {
 
 ## <a name="vars"> Vars
 You can use some valiables with API.  
-You define apitype = ``vars`` and {valiable} in path.  
 For example
 ```
 ...
@@ -94,15 +97,12 @@ api:
   app1:
     path: "/api/func1"
     function: "f1"
-    apitype: normal
   app2:
     path: "/api/func2/{var1}"
     function: "f2"
-    apitype: vars
   app3:
     path: "/api/func3/{var1}/var/{var2}"
     function: "f3"
-    apitype: vars
 ```
 You can get valiables by use ``yamlapigo.ContextGet()``.
 
@@ -138,33 +138,41 @@ If you want to use regexp, set the vars field as ``{var:[regexp]}``.
   app4:
     path: "/api/func4/{id:^[0-9]+$}
     function: "f4"
-    apitype: vars
 ```
 
 ## Sample
 
 sample.yml
 ```
+multiplexer:
 server:
+  host: "www.example.com"
   port: 9999
   notfound: notfound
 api:
   app1:
     path: "/api/func1"
     function: func1
+    methods:
+      - POST
+      - GET
   app2:
     path: "/api/func2/{var1}"
     function: func2
-    methods: "POST,GET"
+    methods:
+      - POST
+      - GET
   app3:
     path: "/api/func3/{var1}/var/{var2}"
     function: func3
-    methods: "PUT"
+    methods:
+      - PUT
   app4:
     path: "/api/func4/{id:^[0-9]+$}"
     function: func4
-    methods: "GET"
-    child:
+    methods:
+      - GET
+    children:
       app5:
         path: "/pic"
         function: func5

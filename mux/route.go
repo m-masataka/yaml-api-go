@@ -8,7 +8,12 @@ type Route struct {
     handler http.Handler
     path    string
     methods []string
+	matchers []matcher
 	children   []Route
+}
+
+type matcher interface {
+	Match( *http.Request, *RouteMatch) bool
 }
 
 func MatchVars(s string, req *http.Request) (bool, bool) {

@@ -4,14 +4,56 @@ import (
     "fmt"
     "time"
     "net/http"
-    "strings"
     "log"
+	"strings"
     "gopkg.in/yaml.v2"
-    "github.com/m-masataka/yamlapigo/mux"
+    mux "github.com/m-masataka/yamlapigo/mux"
+
+	gorilla "github.com/gorilla/mux"
 )
 
-func test(w http.ResponseWriter, r *http.Request) {
-    fmt.Fprintf(w,"test\n")
+const (
+	ALL_METHODS = "GET,PUT,DELETE,PUT,HEAD,OPTIONS,TRACE,CONNECT,PATCH"
+)
+type Server struct {
+	port string
+	function string
+}
+
+type Api struct {
+	path string
+	function string
+	methods []string
+}
+
+type muxRouter struct {
+	router *mux.Router
+	route  *mux.Route
+}
+
+type gorillaRouter struct {
+	router *gorilla.Router
+	route  *gorilla.Route
+}
+
+type AbstructStart interface {
+	StartServer(map[interface{}]interface{}, map[string]func(http.ResponseWriter, *http.Request)) error
+}
+
+func NewServer() *Server {
+	return &Server{}
+}
+
+func NewApi() *Api {
+	return &Api{}
+}
+
+func NewmuxRouter() *muxRouter {
+	return &muxRouter{}
+}
+
+func NewgorillaRouter() *gorillaRouter {
+	return &gorillaRouter{}
 }
 
 func getstringmap(m interface{}, key interface {}, s string) (string, error) {
@@ -19,34 +61,45 @@ func getstringmap(m interface{}, key interface {}, s string) (string, error) {
 	if value, ok := m.(map[interface{}]interface {})[key].(map[interface {}]interface {})[s]; ok {
 		ret = value.(string)
 	} else {
-		return "", fmt.Errorf("Error Not Found")
+		return "", fmt.Errorf("'%s' is Not Found in '%s'", s, key)
 	}
 	return ret, nil
 }
 
-func parseapi(m interface{}, fmap map[string]func(http.ResponseWriter, *http.Request), route *mux.Route, router *mux.Router, counter int) error {
+func getmethodsarray(m interface{}, key interface {}, s string) ([]string, error) {
+	var ret []string
+	if value, ok := m.(map[interface{}]interface {})[key].(map[interface {}]interface {})[s]; ok {
+		for _, v := range value.([]interface{}) {
+			ret = append(ret, v.(string))
+		}
+	} else {
+		return strings.Split(ALL_METHODS,","), fmt.Errorf("'%s' is Not Found in '%s'", s, key)
+	}
+	return ret, nil
+}
+
+func (muxR *muxRouter) parseapi(m interface{}, fmap map[string]func(http.ResponseWriter, *http.Request), api *Api, counter int) error {
 	counter ++
+	var err error
 	for key, _ := range m.(map[interface{}]interface {}) {
-        path, _ := getstringmap(m, key, "path")
-        function, err := getstringmap(m, key, "function")
+		api.path, err = getstringmap(m, key, "path")
 		if err != nil {
-			return fmt.Errorf("function is not defined in yamlfile")
-		} else if _, ok := fmap[function]; !ok {
-			return fmt.Errorf("%s is not defined in map", function)
+			return err
 		}
-        methods, err := getstringmap(m, key, "methods")
+		api.function, err = getstringmap(m, key, "function")
 		if err != nil {
-			methods = "GET,PUT,POST,DELETE,HEAD,OPTIONS,TRACE,CONNECT"
+			return err
+		} else if _, ok := fmap[api.function]; !ok {
+			return fmt.Errorf("%s is not defined in map", api.function)
 		}
-        methodarray := strings.Split(methods,",")
-		var r *mux.Route
+		api.methods, _ = getmethodsarray(m, key, "methods")
 		if counter == 1 {
-			r = router.HandleFunc(path, fmap[function]).Methods(methodarray)
+			muxR.route = muxR.router.HandleFunc(api.path, fmap[api.function]).Methods(api.methods)
 		} else {
-			r = route.Subroute(path,fmap[function]).Methods(methodarray)
+			muxR.route = muxR.route.Subroute(api.path,fmap[api.function]).Methods(api.methods)
 		}
 		if value, ok := m.(map[interface {}]interface {})[key].(map[interface {}]interface {})["children"]; ok {
-			err = parseapi(value, fmap, r, router, counter)
+			err = muxR.parseapi(value, fmap, api, counter)
 			if err != nil {
 				return err
 			}
@@ -55,30 +108,37 @@ func parseapi(m interface{}, fmap map[string]func(http.ResponseWriter, *http.Req
 	return nil
 }
 
-func YamlApi(buf []byte, fmap map[string]func(http.ResponseWriter, *http.Request)) error {
-    m := make(map[interface{}]interface{})
-    err := yaml.Unmarshal(buf, &m)
-    if err != nil {
-        return err
+func (s *Server) Parseserv(m interface{}, fmap map[string]func(http.ResponseWriter, *http.Request)) error {
+    s.port = ":80"
+	for key, _ := range m.(map[interface {}]interface {}) {
+		switch key {
+        case "port":
+			s.port = fmt.Sprintf(":%d",m.(map[interface {}]interface {})[key].(int))
+        case "notfound":
+			s.function = fmt.Sprintf("%s",m.(map[interface {}]interface {})[key].(string))
+        default:
+            continue
+        }
     }
-    router := mux.NewRouter()
-    port := ":80"
-    for serv, _ := range m {
+	return nil
+}
+
+func (muxR *muxRouter) StartServer(m map[interface{}]interface{}, fmap map[string]func(http.ResponseWriter, *http.Request)) error {
+	var err error
+	server := NewServer()
+	if _, ok := m["server"]; ok {
+        err  = server.Parseserv(m["server"], fmap)
+		if err != nil {
+			return err
+		}
+	} else {
+		return fmt.Errorf("'server' is Not Found")
+	}
+	for serv, _ := range m {
         switch serv {
-        case "server":
-            for key, _ := range m[serv].(map[interface {}]interface {}) {
-                switch key {
-                case "port":
-                    port = fmt.Sprintf(":%d",m[serv].(map[interface {}]interface {})[key].(int))
-                case "notfound":
-                    function := fmt.Sprintf("%s",m[serv].(map[interface {}]interface {})[key].(string))
-                    router.NotFoundHandler = http.HandlerFunc(fmap[function])
-                default:
-                    continue
-                }
-            }
         case "api":
-            err := parseapi(m[serv], fmap, nil, router, 0)
+			api := NewApi()
+            err := muxR.parseapi(m[serv], fmap, api, 0)
 			if err != nil {
 				return err
 			}
@@ -86,14 +146,39 @@ func YamlApi(buf []byte, fmap map[string]func(http.ResponseWriter, *http.Request
             continue
         }
     }
+	if server.function != "" {
+		muxR.router.NotFoundHandler = http.HandlerFunc(fmap[server.function])
+	}
     srv := &http.Server{
-            Handler:      router,
-            Addr:         "0.0.0.0"+port,
+            Handler:      muxR.router,
+            Addr:         "0.0.0.0"+server.port,
             WriteTimeout: 15 * time.Second,
             ReadTimeout:  15 * time.Second,
     }
     log.Fatal(srv.ListenAndServe())
     return nil
+}
+
+func (gR *gorillaRouter) StartServer(m map[interface{}]interface{}, fmap map[string]func(http.ResponseWriter, *http.Request)) error {
+	return fmt.Errorf("Sorry, gorilla is not implemented")
+}
+
+func YamlApi(buf []byte, fmap map[string]func(http.ResponseWriter, *http.Request)) error {
+    m := make(map[interface{}]interface{})
+    err := yaml.Unmarshal(buf, &m)
+    if err != nil {
+        return err
+    }
+	if value, ok := m["multiplexer"]; ok && value == "gorilla"{
+		router := NewgorillaRouter()
+		router.router = gorilla.NewRouter()
+		return router.StartServer(m, fmap)
+	} else {
+		router := NewmuxRouter()
+		router.router = mux.NewRouter()
+		return router.StartServer(m, fmap)
+	}
+	return nil
 }
 
 func GetVars(r *http.Request, s string) interface{} {
