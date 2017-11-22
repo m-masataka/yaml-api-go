@@ -21,6 +21,7 @@ const (
 type Server struct {
 	port     string
 	function string
+	host     []string
 }
 
 //endpoint include API endpoint imformation
@@ -28,6 +29,7 @@ type endpoint struct {
 	path     string
 	function string
 	methods  []string
+	host     []string
 }
 
 type muxRouter struct {
@@ -87,6 +89,18 @@ func getmethodsarray(m interface{}, key interface{}, s string) ([]string, error)
 	return ret, nil
 }
 
+func gethostarray(m interface{}, key interface{}, s string) ([]string, error) {
+	var ret []string
+	if value, ok := m.(map[interface {}]interface{})[key].(map[interface{}]interface{})[s]; ok {
+		for _, v := range value.([]interface{}) {
+			ret = append(ret, v.(string))
+		}
+	} else {
+		return nil, fmt.Errorf("'%s' is Not Found in '%s'", s, key)
+	}
+	return ret, nil
+}
+
 func (muxR *muxRouter) parseapi(m interface{}, fmap map[string]func(http.ResponseWriter, *http.Request), ep *endpoint, counter int) error {
 	counter++
 	var err error
@@ -107,6 +121,12 @@ func (muxR *muxRouter) parseapi(m interface{}, fmap map[string]func(http.Respons
 		} else {
 			muxR.route = muxR.route.Subroute(ep.path, fmap[ep.function]).Methods(ep.methods)
 		}
+		 host, err := gethostarray(m, key, "host")
+		if err != nil {
+			muxR.route.AddHost(ep.host)
+		} else {
+			muxR.route.AddHost(host)
+		}
 		if value, ok := m.(map[interface{}]interface{})[key].(map[interface{}]interface{})["children"]; ok {
 			err = muxR.parseapi(value, fmap, ep, counter)
 			if err != nil {
@@ -125,6 +145,11 @@ func (s *Server) parseserv(m interface{}, fmap map[string]func(http.ResponseWrit
 			s.port = fmt.Sprintf(":%d", m.(map[interface{}]interface{})[key].(int))
 		case "notfound":
 			s.function = fmt.Sprintf("%s", m.(map[interface{}]interface{})[key].(string))
+		case "host":
+			value := m.(map[interface{}]interface{})[key]
+			for _, v := range value.([]interface{}) {
+				s.host = append(s.host, v.(string))
+			}
 		default:
 			continue
 		}
@@ -147,6 +172,7 @@ func (muxR *muxRouter) StartServer(m map[interface{}]interface{}, fmap map[strin
 		switch serv {
 		case "api":
 			ep := newEndpoint()
+			ep.host = server.host
 			err := muxR.parseapi(m[serv], fmap, ep, 0)
 			if err != nil {
 				return err

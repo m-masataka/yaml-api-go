@@ -12,17 +12,21 @@ Define your API with yaml file.
 
 - ``server`` field represent global configration.
   - ``port``
+  - ``host`` field restrict domain name.
   - ``notfound`` see [Not found](#notfound)
 - ``api`` field represent api details. 
   - ``path`` is api endpoint path
   - ``function`` is function that is called by api endpoint.
   - ``methods`` is restriction of method. see [Methods](#methods)
+  - ``host`` field restrict domain name.
   - ``children`` define Hierachical api structure.
 
 ```
 server:
   port: 9999
   notfound: notfound
+  host:
+    - "www.example.com"
 api:
   app1:
     path: "/api/func1"
@@ -30,6 +34,8 @@ api:
     methods:
       - GET
       - POST
+    host:
+      - "www.example.com2"
   app2:
     path: "/api/func2/{var1}"
     function: "f2"

@@ -11,6 +11,21 @@ const (
 	slash      = byte(0x2f)
 )
 
+// Trimcoron 
+func Trimcoron(path string) string {
+	p := 0
+	for {
+		if path[p] == coron {
+			break
+		}
+		p ++
+		if p > len(path) -1 {
+			break
+		}
+	}
+	return path[:p]
+}
+
 func forwardPoint(path string, p int) (string, int) {
 	reg := ""
 	for {

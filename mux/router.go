@@ -15,6 +15,7 @@ type RouteMatch struct {
 	Route     *Route
 	Handler   http.Handler
 	Vars      map[string]string
+	MatchErr  error
 	MethodErr bool
 }
 
@@ -33,18 +34,27 @@ func MethodErrFunc(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(405)
 }
 
+// HostErrFunc is set to handler if request host not match.
+func HostErrFunc(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(403)
+}
+
 // ServeHTTP dispatches the handler registered in the matched route.
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	var handler http.Handler
 	var match RouteMatch
 	if r.Match(req, &match) {
 		handler = match.Handler
+		if match.MatchErr == ErrHostMismatch {
+			handler = http.HandlerFunc(HostErrFunc)
+		}
 		if !match.MethodErr {
 			handler = http.HandlerFunc(MethodErrFunc)
 		}
 	} else {
 		handler = http.HandlerFunc(NotFoundDefault)
 	}
+
 	defer ContextClear(req)
 	handler.ServeHTTP(w, req)
 }

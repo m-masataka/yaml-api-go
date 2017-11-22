@@ -1,6 +1,7 @@
 multiplexer:
 server:
-  host: "www.example.com"
+  host:
+    - "www.example.com"
   port: 9999
   notfound: notfound
 api:
@@ -16,6 +17,9 @@ api:
     methods:
       - POST
       - GET
+    host: 
+      - "www.example.com2"
+      - "www.example.com3"
   app3:
     path: "/api/func3/{var1}/var/{var2}"
     function: func3
